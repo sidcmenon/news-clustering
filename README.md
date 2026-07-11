@@ -1,4 +1,4 @@
-# News Drift
+# News Clustering
 
 An interactive visualization of how news stories develop across outlets over time.
 Articles from ~15 RSS feeds are embedded with a sentence-transformer, projected to
