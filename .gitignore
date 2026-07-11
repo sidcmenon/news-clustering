@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+
+
+
+.claude/
