@@ -70,7 +70,18 @@ jobs:
           git add public/data
           if git diff --staged --quiet; then
             echo "No changes to commit."
-          else
-            git commit -m "chore: hourly snapshot $(date -u +%Y-%m-%dT%H:%MZ)"
-            git push
+            exit 0
           fi
+          git commit -m "chore: hourly snapshot $(date -u +%Y-%m-%dT%H:%MZ)"
+          # Rebase-and-retry so a concurrent push to main (another run, or a
+          # manual push) doesn't fail this job on a non-fast-forward.
+          for attempt in 1 2 3; do
+            if git pull --rebase --autostash origin main && git push origin main; then
+              echo "Pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push attempt $attempt failed; retrying..."
+            sleep 5
+          done
+          echo "::error::Failed to push after 3 attempts." >&2
+          exit 1
