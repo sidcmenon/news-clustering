@@ -6,6 +6,9 @@ Articles from ~15 RSS feeds are embedded with a sentence-transformer, projected 
 timeline lets you watch stories break, accelerate, and spread across outlets — and
 inspect how differently each outlet frames the same story.
 
+A GitHub Action refreshes the data every hour and any static host serves the frontend,
+so once deployed the visualization keeps updating on its own.
+
 ## How it works
 
 The project has two halves: a **Python data pipeline** that turns raw RSS into
@@ -98,6 +101,36 @@ python3 backfill.py --min-articles 3  # skip hours with fewer than N articles
 This is read-only with respect to the database — it only writes JSON into
 `public/data/`. Reload the frontend and press ▶ to watch the stories develop.
 
+## Automated hourly updates
+
+`.github/workflows/pipeline.yml` runs `pipeline.py` at the top of every hour (UTC),
+appending a fresh snapshot to the timeline and committing the updated `public/data/`
+back to the repo. Because the pipeline is stateful (article dedupe + hourly thread
+history), the SQLite DB is persisted between runs via GitHub's `actions/cache` rather
+than committed; the committed `news_drift.db` acts only as a seed if the cache is ever
+evicted. The sentence-transformer model is cached too, so it isn't re-downloaded each run.
+
+- Requires repo **Settings → Actions → General → Workflow permissions → Read and write**
+  so the job can push.
+- Trigger it manually anytime from the **Actions** tab (`workflow_dispatch`).
+- GitHub's scheduled runs are best-effort and may start a few minutes late.
+
+## Deployment
+
+The frontend is a static Vite build: `public/data/` is bundled into `dist/` at build
+time and fetched at runtime, so any static host works. This project deploys on
+**Vercel** (auto-detected as Vite — build `npm run build`, output `dist/`, root `./`;
+no environment variables needed).
+
+With Vercel's Git integration the whole loop is hands-off:
+
+```
+RSS feeds → hourly Action → commit public/data → Vercel redeploys → live site
+```
+
+An open tab also re-polls `index.json` every 5 minutes (see `App.tsx`), so it advances
+to newly published snapshots on its own without a refresh.
+
 ## Project structure
 
 ```
@@ -114,9 +147,9 @@ news-drift/
 │   ├── pipeline.py         # main entry point (one snapshot per run)
 │   ├── backfill.py         # replay history into an hourly time series
 │   ├── ingest / embedder / projector / story_thread / scorer / divergence / labeler / exporter
-│   ├── news_drift.db       # SQLite store (articles + thread history)
+│   ├── news_drift.db       # SQLite store (articles + thread history; CI cache seed)
 │   └── requirements.txt
-└── .github/workflows/      # placeholder workflows for scheduled runs (not yet configured)
+└── .github/workflows/      # pipeline.yml — hourly pipeline run (GitHub Action)
 ```
 
 ## Configuration
