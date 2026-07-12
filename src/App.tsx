@@ -5,6 +5,7 @@ import Map            from "./components/Map";
 import Scrubber       from "./components/Scrubber";
 import DivergencePanel from "./components/DivergencePanel";
 import ThreadLabel    from "./components/ThreadLabel";
+import StatsBar       from "./components/StatsBar";
 
 const POLL_MS      = 5 * 60 * 1000;
 const PLAY_STEP_MS = 1000;           
@@ -13,6 +14,7 @@ export default function App() {
   const [snapshot,       setSnapshot]       = useState<Snapshot | null>(null);
   const [currentTs,      setCurrentTs]      = useState<string>("");
   const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
+  const [hoveredThread,  setHoveredThread]  = useState<Thread | null>(null);
   const [playing,        setPlaying]        = useState(false);
   const [error,          setError]          = useState<string | null>(null);
 
@@ -119,9 +121,7 @@ export default function App() {
     <div style={styles.shell}>
       <header style={styles.header}>
         <span style={styles.title}>News Drift</span>
-        <span style={styles.subtitle}>
-          {snapshot.articles.length} articles · {snapshot.threads.length} threads
-        </span>
+        <StatsBar snapshot={snapshot} />
       </header>
 
       <div style={styles.body}>
@@ -129,12 +129,14 @@ export default function App() {
           <Map
             snapshot={snapshot}
             onThreadSelect={setSelectedThread}
+            onThreadHover={setHoveredThread}
             selectedThreadId={selectedThread?.id ?? null}
           />
           <ThreadLabel
             threads={snapshot.threads}
             articles={snapshot.articles}
-            onSelect={setSelectedThread}
+            hoveredThreadId={hoveredThread?.id ?? null}
+            selectedThreadId={selectedThread?.id ?? null}
           />
         </div>
 
