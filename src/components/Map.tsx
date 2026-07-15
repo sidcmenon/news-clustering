@@ -97,7 +97,7 @@ export default function Map({ snapshot, onThreadSelect, onThreadHover, selectedT
       -((clientY - rect.top) / rect.height) * 2 + 1,
     );
     const raycaster = new THREE.Raycaster();
-    raycaster.params.Points = { threshold: 0.6 };
+    raycaster.params.Points = { threshold: 0.4 };
     raycaster.setFromCamera(ndc, getCamera());
     return hitTest(raycaster);
   }

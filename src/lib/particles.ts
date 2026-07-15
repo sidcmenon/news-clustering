@@ -202,7 +202,14 @@ export function applyEmphasis(selectedId: number | null, hoveredId: number | nul
 export function hitTest(raycaster: THREE.Raycaster): Article | null {
   const result = raycaster.intersectObject(points);
   if (!result.length) return null;
-  const idx = result[0].index;
+  let best = result[0];
+  for (const r of result) {
+    const d  = r.distanceToRay    ?? Infinity;
+    const bd = best.distanceToRay ?? Infinity;
+    if (d < bd) best = r;
+  }
+
+  const idx = best.index;
   return idx !== undefined ? (articleIndex[idx] ?? null) : null;
 }
 
